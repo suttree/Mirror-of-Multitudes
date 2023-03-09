@@ -64,9 +64,9 @@ async function takeSelfieAndSendToAPI() {
     await new Promise(resolve => {
             const button = document.createElement("button");
             button.classList.add("vibe");
-            button.textContent = "Peer into the multiverse of you 🌈";
+            button.textContent = "Snap your vibe 🌈";
             button.onclick = resolve;
-            document.getElementById("grid").prepend(button);
+            document.getElementById("grid").append(button);
     });
     document.getElementById("grid").replaceChildren();
 
