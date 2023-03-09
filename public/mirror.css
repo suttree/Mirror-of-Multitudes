@@ -289,6 +289,12 @@ video {
         to {background-position: 100vh 0}
 }
 
+.cameraswitcher {
+        display: block;
+        font-size: 14px;
+        font-style: italic;
+}
+
 /* Smartphones (portrait) ----------- */
 @media only screen and (max-width : 390px) {
         h1 { font-size: 34px; }

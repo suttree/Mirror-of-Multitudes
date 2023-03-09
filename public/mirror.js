@@ -22,8 +22,15 @@ async function takeSelfieAndSendToAPI() {
     
     video.srcObject = stream;
     video.autoplay = true;
+
     document.getElementById("grid").replaceChildren();
     document.getElementById("grid").appendChild(video);
+
+    // Add some copy
+    var span = document.createElement('span');
+    span.classList.add("cameraswitcher");
+    span.innerHTML = "* tap the video to switch cameras";
+    document.getElementById("grid").appendChild(span);
 
     //const element = document.getElementById('grid');
     //element.scrollIntoView();
@@ -82,6 +89,7 @@ async function takeSelfieAndSendToAPI() {
     // Display a loading icon and make the API call
     const loader = document.querySelector('#loader img')
     loader.style.display = 'inline';
+
     try
     {
         const response = await fetch("/api/mirror", { method: "POST", body: formData });
@@ -125,40 +133,5 @@ async function takeSelfieAndSendToAPI() {
     catch 
     {
         console.log('Error removing video');
-    }
-}
-
-async function takeMemoryAndSendToAPI() {
-     // Prompt the user for some text
-    const text = prompt("What do you want to store in your Memory Palais? 🤔");
-    let cleanText = DOMPurify.sanitize(text);
-
-    // Display a loading icon and make the API call
-    const loader = document.querySelector('#loader img')
-    loader.style.display = 'inline';
-    try {
-        // Send the text to the API endpoint via a POST request
-        const formData = new FormData();
-        formData.append("text", cleanText);
-        const response = await fetch("/api/memory", { method: "POST", body: formData });
-
-        // Parse the response and render the generated images
-        const data = await response.json();
-
-        const imagesContainer = document.getElementById("grid");
-        imagesContainer.innerHTML = "<p id='bio'>Remembering &ldquo;" + cleanText + "&rdquo;</p>";
-
-        for (const imageUrl of data.images) {
-                const img = document.createElement("img");
-                img.src = imageUrl;
-                imagesContainer.appendChild(img);
-                img.classList.add("rainbow");
-        }
-        loader.style.display = 'none';
-    }
-    finally
-    {
-        console.log("Error calling API");
-        loader.style.display = 'none';
     }
 }

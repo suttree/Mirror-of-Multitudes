@@ -4,6 +4,8 @@ Playing with the OpenAI API, ChatGPT, and Github Co-Pilot to peek at what the ma
 
 Using image variations to see what the datasets think of our vibe.
 
+See: https://multitudes.vercel.app/
+
 ## Setup & config
 - Clone, npm install, npm run dev
 - Note, this is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
