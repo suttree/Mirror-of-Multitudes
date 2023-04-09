@@ -60,7 +60,7 @@ export default function handler(req, res) {
         buffer.name = "image.png";
         const response = await openai.createImageVariation(
             buffer,
-            1,
+            3,
             "256x256"
         ).then(function(response) {
             response.data.data.forEach((data, index) => {
