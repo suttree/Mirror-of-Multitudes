@@ -9,71 +9,70 @@ export const config = {
 export default function handler(req, res) {
     // Setup OpenAI
     const { Configuration, OpenAIApi } = require("openai");
-    
+    const fs = require("fs");
+    const formidable = require("formidable");
+    const path = require("path");
+
     require('dotenv').config();
     const configuration = new Configuration({
         apiKey: process.env.OPENAI_API_KEY2,
     });
     const openai = new OpenAIApi(configuration);
 
-    // Setup form data handling
-    const fs = require("fs");
-    const formidable = require("formidable");
-
-    const getFormDataImage = async() => {
+    const getFormDataImage = async () => {
         const form = new formidable.IncomingForm();
-        form.maxFileSize = 50 * 1024 * 1024; // 5MB
-        form.KeepExtensions = true;
-        //form.uploadDir = "public/upload"; // don't do this, just use the default for vercel prod
+        form.maxFileSize = 5 * 1024 * 1024; // 5MB
+        form.keepExtensions = true;
 
-        form.parse(req, async(err, fields, files) => {
-            if(err) {
-                console.log('File parse error');
-                console.log(err);
+        form.parse(req, async (err, fields, files) => {
+            if (err) {
+                console.error('File parse error:', err);
                 return res.status(400).json({
                     status: 'Fail',
                     message: 'Error parsing files',
-                    error: err
+                    error: err,
                 });
             }
-            
+
             const filePath = files.selfie.filepath;
-            console.log(filePath);
+            console.log(`File path: ${filePath}`);
 
             try {
-                generateImage(filePath); //pass the image filename
+                await generateImage(filePath); // Pass the image filepath
             } catch (error) {
-                console.log(error);
-                console.log("Error");
-                res.json({
-                    error
-                });
+                console.error('Image generation error:', error);
+                return res.status(500).json({ error: error.message });
             }
-
         });
     };
 
-    var variants = [];
-    const generateImage = async(filePath) => {
-        // read the file into a buffer as we can't store data on vercel
-        var buffer = fs.readFileSync(filePath);
-        buffer.name = "image.png";
-        const response = await openai.createImageVariation(
-            buffer,
-            3,
-            "256x256"
-        ).then(function(response) {
-            response.data.data.forEach((data, index) => {
-                variants[index] = data.url;
+    const generateImage = async (filePath) => {
+        try {
+            // Create a File object from the image
+            const imageFile = {
+                name: path.basename(filePath),
+                type: "image/png",
+                data: fs.readFileSync(filePath),
+            };
+
+            // Create image variation
+            const response = await openai.createImageVariation(
+                imageFile,
+                3, // Number of variations
+                "256x256" // Size of the variations
+            );
+
+            const variants = response.data.data.map((data) => data.url);
+
+            res.status(200).json({
+                status: 'Success',
+                variants,
             });
-
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.json({ process: 'Mirror', variants: variants });
-        }).catch(function(error) {
-            console.log(error);
-        });
-
+        } catch (error) {
+            console.error('Error creating image variation:', error);
+            throw error;
+        }
     };
+
     getFormDataImage();
 }
