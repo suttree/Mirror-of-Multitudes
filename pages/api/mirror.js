@@ -5,13 +5,13 @@ export const config = {
     }
 };
 
-// Generate image variants from an uploaded image
+// Generate image variants from a webcam image
 export default function handler(req, res) {
-    // Setup OpenAI
     const { Configuration, OpenAIApi } = require("openai");
-    const fs = require("fs");
     const formidable = require("formidable");
+    const fs = require("fs");
     const path = require("path");
+    const { Readable } = require("stream");
 
     require('dotenv').config();
     const configuration = new Configuration({
@@ -19,60 +19,46 @@ export default function handler(req, res) {
     });
     const openai = new OpenAIApi(configuration);
 
-    const getFormDataImage = async () => {
-        const form = new formidable.IncomingForm();
-        form.maxFileSize = 5 * 1024 * 1024; // 5MB
-        form.keepExtensions = true;
+    if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+    }
 
-        form.parse(req, async (err, fields, files) => {
-            if (err) {
-                console.error('File parse error:', err);
-                return res.status(400).json({
-                    status: 'Fail',
-                    message: 'Error parsing files',
-                    error: err,
-                });
-            }
+    const form = new formidable.IncomingForm();
+    form.parse(req, async (err, fields, files) => {
+        if (err) {
+            console.error("Error parsing form data:", err);
+            return res.status(400).json({ error: "Error parsing form data" });
+        }
 
-            const filePath = files.selfie.filepath;
-            console.log(`File path: ${filePath}`);
-
-            try {
-                await generateImage(filePath); // Pass the image filepath
-            } catch (error) {
-                console.error('Image generation error:', error);
-                return res.status(500).json({ error: error.message });
-            }
-        });
-    };
-
-    const FormData = require("form-data");
-
-    const generateImage = async (filePath) => {
         try {
-            const form = new FormData();
-            form.append("image", fs.createReadStream(filePath), {
-                filename: path.basename(filePath),
-                contentType: "image/png", // Update this if your file is a different type
-            });
+            const file = files.selfie;
+            const fileStream = fs.createReadStream(file.filepath);
 
+            // Convert file stream into a compatible format for OpenAI
+            const buffer = fs.readFileSync(file.filepath);
+            const fileName = path.basename(file.filepath);
+
+            // OpenAI API call to create image variation
             const response = await openai.createImageVariation(
-                form,
+                new Readable({
+                    read() {
+                        this.push(buffer);
+                        this.push(null);
+                    }
+                }),
                 3, // Number of variations
-                "256x256" // Size of the variations
+                "256x256" // Image size
             );
 
             const variants = response.data.data.map((data) => data.url);
 
             res.status(200).json({
-                status: 'Success',
+                status: "Success",
                 variants,
             });
         } catch (error) {
-            console.error("Error creating image variation:", error);
-            res.status(500).json({ error: error.message });
+            console.error("Error creating image variation:", error.response?.data || error.message);
+            res.status(500).json({ error: error.response?.data || error.message });
         }
-    };
-
-    getFormDataImage();
+    });
 }

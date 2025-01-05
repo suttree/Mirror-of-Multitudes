@@ -97,8 +97,8 @@ async function takeSelfieAndSendToAPI() {
 
         const imagesContainerCopy = document.getElementById("grid");
         const copyList = [
-                "Claim your authentic true being❤️",
-                "You contain multitudes🌻",
+                "Claim your authentic true being ❤️",
+                "You contain multitudes 🌻",
                 "You make this universe special 🦩",  
         ]
         imagesContainerCopy.innerHTML = "<p id='bio'><span class='hi-lite-alt'>" + copyList[Math.floor( (Math.random() * copyList.length ))] + "</span></p>";
