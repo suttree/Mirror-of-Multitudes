@@ -46,18 +46,18 @@ export default function handler(req, res) {
         });
     };
 
+    const FormData = require("form-data");
+
     const generateImage = async (filePath) => {
         try {
-            // Create a File object from the image
-            const imageFile = {
-                name: path.basename(filePath),
-                type: "image/png",
-                data: fs.readFileSync(filePath),
-            };
+            const form = new FormData();
+            form.append("image", fs.createReadStream(filePath), {
+                filename: path.basename(filePath),
+                contentType: "image/png", // Update this if your file is a different type
+            });
 
-            // Create image variation
             const response = await openai.createImageVariation(
-                imageFile,
+                form,
                 3, // Number of variations
                 "256x256" // Size of the variations
             );
@@ -69,8 +69,8 @@ export default function handler(req, res) {
                 variants,
             });
         } catch (error) {
-            console.error('Error creating image variation:', error);
-            throw error;
+            console.error("Error creating image variation:", error);
+            res.status(500).json({ error: error.message });
         }
     };
 
