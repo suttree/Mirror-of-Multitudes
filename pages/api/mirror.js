@@ -11,7 +11,6 @@ export default function handler(req, res) {
     const formidable = require("formidable");
     const fs = require("fs");
     const path = require("path");
-    const { Readable } = require("stream");
 
     require('dotenv').config();
     const configuration = new Configuration({
@@ -32,20 +31,20 @@ export default function handler(req, res) {
 
         try {
             const file = files.selfie;
-            const fileStream = fs.createReadStream(file.filepath);
 
-            // Convert file stream into a compatible format for OpenAI
+            // Ensure the file is read as a buffer
             const buffer = fs.readFileSync(file.filepath);
-            const fileName = path.basename(file.filepath);
+
+            // Construct a File-like object
+            const imageFile = {
+                name: path.basename(file.filepath),
+                type: "image/png", // Adjust type if needed
+                data: buffer,
+            };
 
             // OpenAI API call to create image variation
             const response = await openai.createImageVariation(
-                new Readable({
-                    read() {
-                        this.push(buffer);
-                        this.push(null);
-                    }
-                }),
+                imageFile, // Pass the image file
                 3, // Number of variations
                 "256x256" // Image size
             );
