@@ -105,6 +105,7 @@ async function takeSelfieAndSendToAPI() {
 
         // Parse the response and render the image URLs
         const data = await response.json();
+        console.log(data);
         const imagesContainer = document.getElementById("grid");
         for (const imageUrl of data.variants) {
                 const img = document.createElement("img");
